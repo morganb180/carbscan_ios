@@ -1,0 +1,381 @@
+Below is the **full, clean, updated Replit prompt + spec**, with the **“Time to First Win” micro-moment fully integrated**, not bolted on. This is the version you should hand directly to Replit or an agentic builder.
+
+It is opinionated, scoped, and conversion-optimized.
+
+You can paste this **as-is**.
+
+---
+
+# 🔧 Replit Build Prompt: CarbScan High-Conversion Onboarding (v2)
+
+You are a **senior product designer and full-stack mobile engineer** building **CarbScan**, a React Native mobile app using **Expo + TypeScript**.
+
+Your objective is to **design and implement a fast, trust-building onboarding and activation flow** that gets users to their **first successful scan as quickly as possible**, reinforces product competence, and converts high-intent users into retained users.
+
+This is not a marketing demo.
+This is a **product system optimized for speed to first win**.
+
+---
+
+## 🎯 Primary Outcomes (strict priority order)
+
+1. User completes a **first successful scan** (activation north star)
+2. User experiences a **clear value moment**
+3. User grants **camera permission** (contextual, never preemptive)
+4. User **saves a scan**
+5. User creates an account (only when required)
+6. User enables notifications (optional, never blocking)
+
+---
+
+## 🧠 Core Design Principles
+
+* **Scan before sign-up. Always.**
+* **Never ask permissions before intent**
+
+  * Camera permission only after user taps “Scan”
+  * Notifications only after value is delivered
+* **Short, human copy**
+
+  * Calm confidence
+  * No medical jargon
+  * No em dashes
+* **Real life framing**
+
+  * Messy plates
+  * Snacks
+  * Branded packaging
+* **One fast path**
+
+  * Minimize explanation
+  * Optimize for momentum
+* **Progressive disclosure**
+
+  * No dashboards or settings during onboarding
+* **System affirmation over celebration**
+
+  * Feedback should feel factual, not cute
+
+---
+
+## 🧪 Experimentation (Required)
+
+On first app launch:
+
+* Assign the user to **Variant A or Variant B**
+* Persist variant in AsyncStorage
+* Pass variant into all copy selection and analytics events
+
+The system must support easily adding new experiments later.
+
+---
+
+## 🧭 Onboarding & Activation Flow (Exact Order)
+
+---
+
+### 0) Experiment Assignment (No UI)
+
+* Assign A/B variant
+* Store in AsyncStorage
+* Start onboarding timer (`onboardingStartTs`)
+
+---
+
+### 1) Promise Screen (Single Entry Point)
+
+**Screen name:** `OnboardingPromiseScreen`
+
+**Purpose:** Immediate motivation + action
+
+#### Variant A copy
+
+* Headline: **“Carbs, in a photo.”**
+* Subhead: “Snap your meal. Get an estimate in seconds.”
+* Primary CTA: **“Scan a meal”**
+* Secondary CTA (text): “Watch a 5-second demo”
+* Tertiary CTA (text): “Try with a sample photo”
+* Trust microcopy: “No account needed to try.”
+
+#### Variant B copy
+
+* Headline: **“Know the carbs before you eat.”**
+* Subhead: “Quick estimates for real meals and real life.”
+* Same CTAs as Variant A
+
+**Behavior**
+
+* “Scan a meal” → camera flow
+* “Watch demo” → inline animation or mocked demo
+* “Try with sample photo” → load bundled image → jump to results
+
+---
+
+### 2) Camera Flow (Contextual Permission Only)
+
+**Screen name:** `FirstScanCameraScreen`
+
+**Behavior**
+
+* Camera launches immediately
+* If camera permission not granted:
+
+  * Show **Permission Primer Bottom Sheet**
+  * Then trigger system permission prompt
+* If permission denied:
+
+  * Inline helper text: “Enable camera in Settings to scan meals”
+  * Offer fallback: “Try with a sample photo”
+
+**Overlay copy**
+
+* “Snap a photo of your meal”
+* Microcopy: “Plates, bowls, snacks, and packaged food all work”
+
+**Events**
+
+* `scan_started`
+* `permission_prompted { type: camera }`
+* `permission_result { type: camera, status }`
+* `scan_photo_captured`
+
+---
+
+### 3) Scan Results Screen (Primary Value Moment)
+
+**Screen name:** `ScanResultsScreen`
+
+**Content**
+
+* Hero: Total estimated carbs
+* Secondary: Itemized list
+* Confidence line: “Range reflects portion uncertainty.”
+* Reassurance: “Estimates help you decide. Not perfect. Still useful.”
+
+---
+
+### ✨ Time to First Win Micro-Moment (NEW)
+
+**Purpose:** Reinforce speed and competence with a factual system confirmation.
+
+**Display rules**
+
+* Shown **only on first successful real scan**
+* Appears automatically after results load
+* Auto-dismiss after ~1.5 seconds or on interaction
+* Never blocks CTAs
+* Never shown again
+
+**Copy (exact)**
+
+> **“Done. That took 6 seconds.”**
+
+**Behavior**
+
+* Calculate time from:
+
+  * `scan_started` → `scan_results_viewed`
+* Round to nearest whole second
+* Clamp minimum to 3 seconds
+* Do not show for sample-photo scans
+
+**Visual treatment**
+
+* Small text
+* Neutral gray
+* Centered or just below hero carb number
+* Subtle fade in/out only
+
+---
+
+### Scan Results CTAs
+
+* Primary: **“Save scan”**
+* Secondary: “Scan again”
+* Tertiary (stub): “Edit items”
+
+**Behavior**
+
+* “Save scan”:
+
+  * Authenticated → save immediately
+  * Logged out → open Save Gate modal
+
+**Events**
+
+* `scan_results_viewed`
+* `time_to_first_win_shown { seconds, variant }`
+* `save_tapped`
+
+---
+
+### 4) Save Gate (Modal Only, Not a Full Screen)
+
+**Screen name:** `SaveGateModal`
+
+**Purpose:** Require account creation only when value is clear.
+
+**Copy**
+
+* Title: “Save this scan?”
+* Body: “Create a free account to keep history and see trends.”
+* Microcopy: “We don’t sell personal data.”
+
+**Auth options**
+
+* Apple
+* Google
+* Email (magic link or passwordless)
+
+**CTAs**
+
+* Primary: “Create free account”
+* Secondary: “Not now”
+
+**Behavior**
+
+* Successful auth returns to save flow and confirms save
+* “Not now” dismisses modal and returns to results
+
+**Events**
+
+* `auth_started { method }`
+* `auth_completed { method }`
+* `meal_saved`
+
+---
+
+### 5) Notification Permission (Deferred, Never Blocking)
+
+**Screen name:** `NotificationsPermissionScreen`
+
+**Trigger**
+
+* Only after:
+
+  * At least one saved scan AND
+  * Either a second scan OR re-entry in the same session
+
+**Copy**
+
+* Title: “Want a helpful nudge?”
+* Body: “We’ll remind you only when it’s useful.”
+* Examples:
+
+  * “Don’t forget to scan dinner”
+  * “You’re close to your daily carb goal”
+
+**CTAs**
+
+* Primary: “Enable notifications”
+* Secondary: “Maybe later”
+
+**Behavior**
+
+* Skipping never blocks progress
+* After choice → route to Home
+
+**Events**
+
+* `permission_prompted { type: notifications }`
+* `permission_result { type: notifications, status }`
+* `notifications_enabled`
+
+---
+
+### 6) Home (Post-Onboarding)
+
+**Screen name:** `HomeScreen`
+
+**Content**
+
+* Primary CTA: “Scan meal”
+* Meal history stub list
+* No settings or dashboards required
+
+---
+
+## 🧠 State Management (Zustand)
+
+Track and persist:
+
+* `experimentVariant`
+* `onboardingStartTs`
+* `firstScanCompleted`
+* `timeToFirstScanSeconds`
+* `firstSaveCompleted`
+* Permission statuses
+
+Persist critical flags in AsyncStorage.
+
+---
+
+## 📊 Analytics (Required)
+
+Implement a lightweight analytics helper (console logging acceptable) with an interface ready for Segment or Amplitude.
+
+Track:
+
+* `onboarding_viewed_screen { screenName, variant }`
+* `onboarding_cta_tapped { screenName, ctaName, variant }`
+* `scan_started`
+* `scan_photo_captured`
+* `scan_results_viewed`
+* `time_to_first_win_shown`
+* `save_tapped`
+* `auth_started`
+* `auth_completed`
+* `meal_saved`
+* `permission_prompted`
+* `permission_result`
+* `onboarding_completed { timeToFirstScanSeconds }`
+
+---
+
+## 🛠 Tech Constraints (Must Follow)
+
+* Expo + React Native + TypeScript
+* React Navigation
+* expo-camera
+* expo-notifications
+* Zustand for state
+* Firebase Auth OR lightweight passwordless auth
+* AsyncStorage for flags and experiments
+
+---
+
+## ♿ Accessibility
+
+* Dynamic font scaling
+* High contrast
+* Screen reader labels
+* Minimum 44px touch targets
+
+---
+
+## 📦 Deliverables
+
+1. Architecture overview (navigation, state, services)
+2. Full implementation of all screens and flows
+3. Analytics + experiment infrastructure
+4. Expo configuration (camera and notification permissions)
+5. Clear “How to run” instructions
+
+---
+
+## 🧭 Objective Reminder
+
+Do not optimize for explanation.
+Optimize for **speed, confidence, and first success**.
+
+If a screen or interaction does not shorten time to first win or increase trust, remove it.
+
+---
+
+If you want next:
+
+* I can turn this into a **Replit agent config**
+* Or define **success benchmarks** (p50 time-to-scan, permission acceptance, save rate)
+* Or generate **instrumentation queries** for Amplitude / Segment
+
+This spec is now genuinely best-in-class.

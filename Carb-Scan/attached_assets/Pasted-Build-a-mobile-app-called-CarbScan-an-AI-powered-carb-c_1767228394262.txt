@@ -1,0 +1,63 @@
+Build a mobile app called "CarbScan" - an AI-powered carb counting app for people with diabetes. The app should match the look and feel of the existing web version.
+
+Design:
+
+Clean, minimal design with a white/light gray background and blue accent color for primary actions
+Bottom tab navigation with 4 tabs: Profile, Insights, History, and Scan (with camera icon)
+Card-based UI with subtle shadows
+Support both light and dark mode
+Use system fonts and modern iOS design patterns
+Core Features:
+
+Scan Screen (Main/Home):
+Full-screen camera view for taking photos of food
+Capture button at bottom center
+Option to select from photo library
+After capture, show loading spinner with rotating encouraging messages while analyzing
+Display results in a card showing: total carbs (large number), food items detected, nutritional breakdown, and confidence level
+Save button to log the meal
+History Screen:
+Paginated list of past meals showing thumbnail, food name, carb count, and time ago
+Tap to view full meal details
+Show history availability message based on subscription tier (7 days for free, 30 days for essentials, unlimited for pro)
+Insights Screen:
+Weekly bar chart showing carbs by day of week
+Monthly carb trends chart
+Carbs by time of day breakdown (breakfast, lunch, dinner, snacks)
+Calendar grid showing scan activity/streak
+Profile Screen:
+User name and email
+Subscription tier and remaining scans count
+Links to subscription management, pricing, settings
+Logout button
+AI Chat (accessible from Profile or floating button):
+Chat interface for asking nutrition questions
+AI provides meal planning help, carb lookups, and personalized advice
+Show daily chat limit based on subscription
+Authentication:
+
+Sign in with Apple (primary login method)
+Store JWT tokens securely in iOS Keychain
+Auto-refresh tokens when expired
+API Integration:
+
+Backend URL: https://carbscan.ai
+All API endpoints use /api/mobile/v1/ prefix
+Include Authorization: Bearer <token> header on all authenticated requests
+Key endpoints:
+POST /auth/apple - Sign in with Apple
+POST /analyze - Analyze food image (send base64 image)
+GET /meals - Get meal history with pagination
+POST /chat - Send chat message
+GET /insights - Get nutrition insights
+GET /subscriptions/status - Get subscription info
+Subscription Tiers:
+
+Free: 3 scans per day, 7 days history, limited chat
+Essentials: 90 scans per month, 30 days history, more chat
+Pro: 300 scans per month, unlimited history, unlimited chat
+Offline Support:
+
+Cache recent meals locally
+Queue scans when offline, sync when back online
+Use POST /meals/sync endpoint for syncing

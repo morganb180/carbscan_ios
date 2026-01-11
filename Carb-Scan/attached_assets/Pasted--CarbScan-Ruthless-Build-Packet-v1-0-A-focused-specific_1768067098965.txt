@@ -1,0 +1,769 @@
+# CarbScan Ruthless Build Packet v1.0
+
+A focused specification for building a **top-tier, high-conversion** carb scanning app without enterprise bloat.
+
+This version is optimized for **speed to first win**, **trust**, and **repeat daily usability**. It intentionally defers anything that slows shipping or increases edge cases.
+
+---
+
+# 1) Replit Agent System Prompt (v1 Ruthless)
+
+Copy/paste as the agent’s instruction prompt.
+
+```text
+You are a principal mobile product designer AND senior React Native engineer building CarbScan (Expo + TypeScript). Your mandate is to ship a top 1% App Store quality UX for a high-frequency utility: take a photo, estimate carbs, save, and review history.
+
+Optimize for:
+1) Speed to first win (photo -> results)
+2) Trust through clarity (ranges + simple confidence)
+3) Repeat usability (5–10 times/day, low fatigue)
+4) Accessibility (dynamic type, contrast, screen reader labels, 44px targets)
+
+Avoid:
+- Product tours or extra onboarding screens
+- Overbuilt settings, dashboards, analytics views
+- Offline scan queueing, sync systems, retry engines
+- Complex gesture systems (swipe actions, long-press menus) in v1
+- Excess screens that aren’t required for scan->save->history
+
+Required outputs:
+A) A complete design system implemented in code (tokens + theme + reusable components) with light theme only (dark mode later).
+B) High-fidelity implementation of core screens only:
+   - Promise / Entry
+   - Camera Scan (with contextual permission primer)
+   - Scan Results (simple edit sheet, no swipe gestures)
+   - Save Gate Modal
+   - Home (Scan + Meal History list)
+   - Notifications Permission (deferred, never blocking)
+C) Robust interaction quality: loading states, tap feedback, skeletons where needed, toasts.
+D) Accessibility: dynamic type, reduced motion support, high contrast, screen reader labels, announcements where helpful.
+E) Analytics: consistent event helper with variant and screenName attached.
+
+Experimentation:
+- On first launch, assign Variant A or B and persist in AsyncStorage.
+- Variants only affect Promise headline/subhead (keep CTA label constant).
+- Attach variant to all analytics events.
+
+Implementation constraints:
+- Expo + React Native + TypeScript (strict mode)
+- React Navigation (native stack + modal presentation)
+- expo-camera
+- expo-notifications
+- expo-haptics (optional but recommended)
+- expo-image-manipulator (compress photos for speed)
+- AsyncStorage
+- zustand for state
+- Auth: Firebase Auth preferred (Apple/Google/Email) OR stub email passwordless for v1
+- Analytics helper (console now, Segment/Amplitude-ready interface)
+- Error boundary with friendly fallback
+
+Do not optimize for explanation. Optimize for momentum, clarity, and calm confidence.
+Build it end-to-end. Provide architecture notes and run instructions.
+```
+
+---
+
+# 2) Ruthless Product Scope (What exists in v1)
+
+## v1 includes
+
+* First-run: Promise → Camera → Results → Save Gate (if needed) → Home
+* Returning user: Home → Camera → Results → Save → Home
+* History list (recent scans) on Home
+* Simple Scan Detail is optional in v1. If included, it should reuse Results UI and be minimal.
+
+## v1 explicitly excludes (for now)
+
+* Offline scan queueing + sync
+* Full settings suite
+* Dark mode polish (support later)
+* Power-user shortcuts (long press menus, swipe-to-delete, batch editing)
+* Share flows
+* Deep links
+* Complex editing flows (manual add item, elaborate ingredient management)
+
+---
+
+# 3) Design System Principles (v1)
+
+| Principle             | Meaning in practice                                         |
+| --------------------- | ----------------------------------------------------------- |
+| Utility-first         | Get in, get value, get out.                                 |
+| One primary action    | Every screen has exactly one dominant action.               |
+| Calm confidence       | Estimates feel trustworthy without feeling clinical.        |
+| Minimal color         | Color is used for actions and states, not decoration.       |
+| Content breathes      | Generous spacing reduces fatigue.                           |
+| Fast feedback         | Every tap responds instantly (visual feedback < 100ms).     |
+| Forgiving             | Undo where it matters. No punishment.                       |
+| Accessible by default | Dynamic type, reduced motion support, screen reader labels. |
+
+---
+
+# 4) Design Tokens (Implement exactly)
+
+## 4.1 Colors (Light theme only in v1)
+
+**Neutrals**
+
+* `bg` = `#FAFAF8`
+* `surface` = `#FFFFFF`
+* `surfaceAlt` = `#F3F4F2`
+* `surfacePressed` = `#EDEEE9`
+* `border` = `#E6E7E3`
+* `text` = `#111214`
+* `textSecondary` = `#4A4E55`
+* `textTertiary` = `#717680`
+* `textInverse` = `#FFFFFF`
+* `icon` = `#2A2D33`
+
+**Accent**
+
+* `accent` = `#3B82F6`
+* `accentPressed` = `#2563EB`
+* `accentSoft` = `#E8F1FF`
+
+**Status**
+
+* `success` = `#16A34A`
+* `successSoft` = `#EAF7EE`
+* `warning` = `#F59E0B`
+* `warningSoft` = `#FFF5E6`
+* `danger` = `#DC2626`
+* `dangerSoft` = `#FDECEC`
+
+**Overlays**
+
+* `scrim` = `rgba(17, 18, 20, 0.45)`
+
+**Semantic aliases (use in components)**
+
+```ts
+semantic = {
+  screenBg: colors.bg,
+  cardBg: colors.surface,
+  cardBgAlt: colors.surfaceAlt,
+  divider: colors.border,
+
+  textPrimary: colors.text,
+  textSecondary: colors.textSecondary,
+  textTertiary: colors.textTertiary,
+  textOnAccent: colors.textInverse,
+
+  primaryCtaBg: colors.accent,
+  primaryCtaBgPressed: colors.accentPressed,
+  link: colors.accent,
+
+  successFg: colors.success,
+  successBg: colors.successSoft,
+  warningFg: colors.warning,
+  warningBg: colors.warningSoft,
+  errorFg: colors.danger,
+  errorBg: colors.dangerSoft,
+};
+```
+
+Accessibility:
+
+* Text contrast must meet AA
+* Never convey meaning by color alone (use text labels + optional icons)
+
+---
+
+## 4.2 Typography (System fonts)
+
+* iOS: SF Pro (system)
+* Android: system default
+
+Type scale tokens:
+
+* `display` 28/34 weight 700 (hero numbers)
+* `h1` 22/28 weight 700 (screen titles)
+* `h2` 18/24 weight 600 (section headers)
+* `body` 16/22 weight 400
+* `bodyMedium` 16/22 weight 500
+* `button` 16/22 weight 600
+* `caption` 13/18 weight 400
+* `micro` 12/16 weight 400
+
+Rules:
+
+* Allow dynamic type
+* Headlines max 2 lines
+* Avoid paragraphs longer than 3 lines
+* No em dashes in user copy
+
+---
+
+## 4.3 Spacing (8-pt grid)
+
+* `s1` 4
+* `s2` 8
+* `s3` 12
+* `s4` 16
+* `s5` 20
+* `s6` 24
+* `s7` 32
+* `s8` 40
+* `s9` 48
+
+Screen padding:
+
+* Horizontal padding: `s4` (16)
+* Vertical rhythm: use `Stack` spacing tokens
+
+---
+
+## 4.4 Radius
+
+* `r1` 8
+* `r2` 12
+* `r3` 16
+* `r4` 20
+* `rFull` 9999
+
+---
+
+## 4.5 Shadows (subtle only)
+
+Card:
+
+* iOS shadowOpacity 0.06, radius 10, offset 0/4
+* Android elevation 2
+
+Modal:
+
+* iOS shadowOpacity 0.12, radius 20, offset 0/8
+* Android elevation 6
+
+---
+
+## 4.6 Motion (minimal)
+
+* Press feedback: 100ms
+* Modal/sheet: 250ms
+* Reduced motion: disable non-essential animation
+
+---
+
+# 5) Component Inventory (v1 Only)
+
+Implement these reusable UI components with full states.
+
+## 5.1 Layout primitives
+
+* `Screen` (safe area, background, optional scroll)
+* `Stack` (vertical spacing)
+* `Row` (horizontal layout)
+* `Divider`
+* `Spacer`
+
+## 5.2 Buttons
+
+Single `Button` component:
+
+* Variants: `primary`, `secondary`, `ghost`, `destructive`
+* Sizes: `medium` (48), `large` (56)
+* States: default, pressed, disabled, loading
+* Tap feedback: opacity + subtle scale (0.98)
+* Minimum 44px target
+
+## 5.3 Text
+
+* `ThemedText` with variants
+* `LinkText` for tertiary actions (with padding for touch target)
+
+## 5.4 Card
+
+* `Card` base
+* `MealHistoryCard` (thumbnail + carbs + timestamp)
+* `ResultItemRow` (name + carbs + portion summary + edit affordance)
+
+## 5.5 Bottom sheet / modal
+
+* `BottomSheet` (permission primer)
+* `ModalSheet` (SaveGate, edit item)
+
+Rules:
+
+* Rounded corners r4
+* Scrim overlay
+* Primary button at bottom
+
+## 5.6 Toast
+
+* `Toast` with optional action (“Undo”)
+* Appears from top or bottom, auto-dismiss
+
+## 5.7 Loading
+
+* `Spinner`
+* `SkeletonRow` for history loading
+
+## 5.8 Camera overlay
+
+* Capture button
+* Helper text
+* Close button
+* Permission denied inline view
+
+---
+
+# 6) Screen Specs (v1 Ruthless)
+
+## 6.1 Promise / Entry Screen
+
+Route: `OnboardingPromiseScreen`
+
+Purpose: Immediate motivation + action
+
+Variant A:
+
+* Headline: “Carbs, in a photo.”
+* Subhead: “Snap your meal. Get an estimate in seconds.”
+
+Variant B:
+
+* Headline: “Know the carbs before you eat.”
+* Subhead: “Fast estimates for real meals.”
+
+CTAs:
+
+* Primary: **Scan a meal**
+* Secondary: **Try a sample photo**
+* Tertiary: “Watch a 5-second demo” (inline expand, no navigation)
+  Trust line: “No account needed to try.”
+
+Behavior:
+
+* Scan → camera
+* Sample → results with bundled image + mock analysis
+* Demo expands inline card
+
+Events:
+
+* `screen_viewed { screenName: "Promise", variant }`
+* `cta_tapped { ctaName: "scan_meal" | "sample_photo" | "watch_demo", variant }`
+
+Accessibility:
+
+* Read headline, subhead, then primary CTA first
+* Demo expansion announced
+
+---
+
+## 6.2 Camera Screen (Contextual permission)
+
+Route: `FirstScanCameraScreen`
+
+Behavior:
+
+* If permission granted: open camera immediately
+* If not determined: show Permission Primer bottom sheet
+
+  * Title: “Camera access needed”
+  * Body: “CarbScan uses your camera to estimate carbs from photos.”
+  * Primary: “Continue” (only then show system prompt)
+  * Secondary: “Try sample photo”
+* If denied: show Denied inline view
+
+  * “Enable camera in Settings to scan meals.”
+  * Buttons: “Open Settings” and “Try sample photo”
+
+Overlay copy:
+
+* “Center your meal in the frame”
+* “Plates, bowls, snacks, and packaged food all work”
+
+Capture:
+
+* Haptic (optional)
+* Compress photo (target max 1200px, ~500KB)
+* Show processing overlay while navigating to Results
+
+Events:
+
+* `screen_viewed { screenName: "Camera" }`
+* `permission_prompted { type: "camera" }`
+* `permission_result { type: "camera", status }`
+* `photo_captured`
+
+Accessibility:
+
+* Capture button labeled
+* Announce: “Photo captured. Analyzing.”
+
+Offline (ruthless):
+
+* If offline, do not pretend it can scan.
+* Show inline: “Internet required to estimate carbs.”
+* Offer “Try sample photo.”
+
+---
+
+## 6.3 Results Screen (Value + simple editing)
+
+Route: `ScanResultsScreen`
+
+Hierarchy:
+
+1. Total estimated carbs (display)
+2. Range line (caption): “Range reflects portion uncertainty.”
+3. Confidence line (caption): “Confidence: High/Medium/Low” + one sentence reason
+4. Item list
+5. Reassurance (caption): “Not perfect. Still useful.”
+6. Primary CTA: Save scan
+7. Secondary CTA: Scan again
+
+Editing (v1):
+
+* Tap item → Edit Item Sheet
+* Edit sheet includes:
+
+  * Name (editable)
+  * Portion stepper (simple multipliers: 0.5x, 0.75x, 1x, 1.25x, 1.5x, 2x)
+  * Updated item carbs and total recalculated live
+  * Done button
+* No swipe-to-delete in v1
+* Delete action inside edit sheet only (optional)
+
+Save behavior:
+
+* If authenticated: save immediately → toast “Scan saved” → navigate Home
+* If not: open SaveGateModal
+* Add toast with “Undo” action (5 seconds)
+
+  * Undo removes saved scan and returns to Results
+
+Events:
+
+* `screen_viewed { screenName: "Results", totalCarbs, itemCount, confidence }`
+* `item_edited { itemId }`
+* `save_tapped { isAuthenticated }`
+* `save_completed { scanId }`
+* `save_undone`
+* `scan_again_tapped`
+
+Accessibility:
+
+* Total read first
+* Items labeled with carbs and “double-tap to edit”
+* Announce on save success
+
+---
+
+## 6.4 Save Gate Modal (conversion after value)
+
+Route: `SaveGateModal` (modal)
+
+Copy:
+
+* Title: “Save this scan?”
+* Body: “Create a free account to keep history and see trends.”
+* Trust line: “We don’t sell personal data.”
+
+Auth options:
+
+* Apple
+* Google
+* Email (stub is OK)
+
+Buttons:
+
+* Primary: “Create free account”
+* Secondary: “Not now”
+
+Behavior:
+
+* Successful auth auto-saves the pending scan and navigates Home
+* Dismiss returns to Results without saving
+
+Events:
+
+* `auth_modal_viewed`
+* `auth_started { method }`
+* `auth_completed { method }`
+* `auth_dismissed`
+
+Accessibility:
+
+* Focus trapped in modal
+* Buttons clearly labeled
+
+---
+
+## 6.5 Home Screen (history + scan)
+
+Route: `HomeScreen`
+
+Hierarchy:
+
+* Header: “CarbScan”
+* Primary CTA: “Scan a meal”
+* Section header: “Recent scans”
+* List of recent scans (last 10)
+* Empty state if none
+
+MealHistoryCard shows:
+
+* Thumbnail
+* Total carbs
+* Timestamp (“2h ago”)
+* Item count
+
+Interactions:
+
+* Tap history row can open a minimal detail screen later, but in v1 it can be non-interactive or reuse Results view read-only if needed.
+
+Loading:
+
+* Skeleton rows
+
+Events:
+
+* `screen_viewed { screenName: "Home", scanCount }`
+* `scan_cta_tapped`
+
+Accessibility:
+
+* CTA labeled first
+* History rows read cleanly
+
+---
+
+## 6.6 Notifications Permission (deferred)
+
+Route: `NotificationsPermissionScreen` (modal over Home)
+
+Trigger rules (all must be true):
+
+1. User has saved at least one scan
+2. User has completed at least 2 scans total
+3. Not prompted before
+4. Not in first app session
+
+Copy:
+
+* Title: “Want a helpful nudge?”
+* Body: “We’ll remind you only when it’s useful.”
+* Primary: “Enable notifications”
+* Secondary: “Maybe later”
+
+Behavior:
+
+* System prompt only on CTA tap
+* If “Maybe later,” wait 7 days before prompting again
+
+Events:
+
+* `screen_viewed { screenName: "NotificationsPermission" }`
+* `permission_prompted { type: "notifications" }`
+* `permission_result { type: "notifications", status }`
+* `permission_deferred { type: "notifications" }`
+
+---
+
+# 7) Navigation Architecture (v1)
+
+```
+RootNavigator
+├── OnboardingStack (if !hasCompletedOnboarding)
+│   ├── Promise
+│   ├── Camera
+│   └── Results
+├── MainStack (if hasCompletedOnboarding)
+│   ├── Home
+│   ├── Camera
+│   └── Results
+└── Modals
+    ├── SaveGateModal
+    └── NotificationsPermission
+    └── EditItemSheet
+```
+
+Completion rule:
+
+* `hasCompletedOnboarding = true` after the first successful **save** (not just first scan).
+
+---
+
+# 8) State (Zustand) — v1 only
+
+Persist only what’s needed.
+
+## 8.1 ExperimentStore
+
+* `variant: 'A' | 'B'`
+* assigned once, persisted
+
+## 8.2 SessionStore
+
+* `sessionId` generated each app launch (not persisted)
+
+## 8.3 OnboardingStore (persisted)
+
+* `hasCompletedOnboarding`
+* `scanCount`
+* `hasSavedScan`
+* `notificationPromptedAt` (date or null)
+* `notificationDeferredUntil` (date or null)
+
+## 8.4 AuthStore (persisted)
+
+* `user` or `isAuthenticated`
+
+## 8.5 ScansStore (persisted)
+
+* `scans[]` saved locally (simple local DB or AsyncStorage JSON)
+* v1 can be local-only history to start
+
+---
+
+# 9) Analytics (Ruthless)
+
+Keep it disciplined but not massive.
+
+Attach to all events:
+
+* `variant`, `sessionId`, `screenName`, `platform`, `timestamp`, `isAuthenticated`
+
+Track only:
+
+* `app_opened`
+* `screen_viewed`
+* `cta_tapped`
+* `permission_prompted`
+* `permission_result`
+* `photo_captured`
+* `scan_completed` (even if mocked)
+* `item_edited`
+* `save_tapped`
+* `save_completed`
+* `save_undone`
+* `notifications_prompted`
+* `notifications_result`
+
+---
+
+# 10) Error Handling (Friendly, minimal)
+
+App-level error boundary with:
+
+* Title: “Something went wrong”
+* Body: “Tap below to try again.”
+* Button: “Try again”
+
+Runtime errors:
+
+* Analysis failed: “Couldn’t analyze photo. Try again in brighter light.”
+* Save failed: “Couldn’t save. Try again.”
+
+No scary codes. Always provide next action.
+
+---
+
+# 11) Implementation Plan (Step-by-step, ruthless)
+
+## Phase 0: Setup
+
+1. Create Expo TS project (strict mode)
+2. Install dependencies (nav, camera, notifications, zustand, async storage, image manipulator)
+3. Add error boundary
+
+✅ Done when app boots and navigation shell runs.
+
+## Phase 1: Design System (code-first)
+
+1. Create tokens + theme
+2. Build `Screen`, `Stack`, `Row`, `ThemedText`, `Button`, `Card`, `BottomSheet`, `Toast`, `Spinner`, `SkeletonRow`
+3. Create a `PlaygroundScreen` showing every component and state
+
+✅ Done when components look cohesive and readable at large font scale.
+
+## Phase 2: State + Analytics
+
+1. Experiment assignment A/B persisted
+2. SessionId per launch
+3. Onboarding + scans store persistence
+4. Analytics helper that auto-attaches props
+
+✅ Done when events log correctly with variant + session.
+
+## Phase 3: Navigation
+
+1. Root conditional stacks
+2. Modal routing for SaveGate + Notifications + EditItemSheet
+
+✅ Done when all screens can be reached and back behavior is correct.
+
+## Phase 4: Build screens in this order
+
+1. Promise screen (variants, demo inline, sample photo)
+2. Camera screen (permission primer + denied state)
+3. Results screen (total + confidence + list + edit sheet)
+4. Save gate modal (auth stub acceptable)
+5. Home screen (history list + skeleton + empty state)
+6. Notifications permission modal (trigger logic)
+
+✅ Done when full flow works end-to-end.
+
+## Phase 5: Polish pass (non-negotiable)
+
+* Tap feedback everywhere
+* Loading states
+* Accessibility labels
+* Dynamic type test at 200%
+* Reduced motion respect for non-essential animation
+
+✅ Done when it feels fast and calm.
+
+---
+
+# 12) Copy Reference (v1)
+
+Promise:
+
+* Trust line: “No account needed to try.”
+
+Camera:
+
+* “Center your meal in the frame”
+* “Plates, bowls, snacks, and packaged food all work”
+* Permission title: “Camera access needed”
+* Denied: “Enable camera in Settings to scan meals.”
+
+Results:
+
+* “Range reflects portion uncertainty.”
+* “Not perfect. Still useful.”
+* Save: “Save scan”
+* Again: “Scan again”
+
+Save gate:
+
+* “Save this scan?”
+* “Create a free account to keep history and see trends.”
+* “We don’t sell personal data.”
+
+Notifications:
+
+* “Want a helpful nudge?”
+* “We’ll remind you only when it’s useful.”
+
+---
+
+# 13) Definition of Done (v1)
+
+The build is complete when:
+
+* [ ] Design system components exist and are used everywhere
+* [ ] Promise → Camera → Results → Save Gate → Home works flawlessly
+* [ ] Contextual camera permission works with primer
+* [ ] Save requires auth only when needed
+* [ ] Home shows history and supports repeat scanning
+* [ ] Notifications prompt is deferred and never blocking
+* [ ] Accessibility baseline is met (labels, dynamic type, contrast, targets)
+* [ ] The experience feels snappy, clear, calm, and friendly
+
+---
+
+If you want, I can also produce a **v1.1 backlog** of the deferred items (dark mode polish, scan detail, settings expansion, sharing, richer editing, offline queueing) in the same format, so the team can roll forward without rethinking the architecture.

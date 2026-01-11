@@ -1,0 +1,323 @@
+Absolutely. Below is a **design-forward, product-grade spec** you can hand directly to Replit. It is intentionally detailed enough that a designer-engineer can execute without guessing, while still leaving room for taste.
+
+This spec covers **Splash Screen + Welcome Screen only**, but treats them as a *system*, not decoration.
+
+---
+
+# 🎨 CarbScan Splash + Welcome Experience
+
+**Design & Implementation Spec for Replit**
+
+You are designing the **very first 1–2 seconds** of CarbScan.
+This moment should communicate three things, immediately and subconsciously:
+
+1. **Speed** – this app is fast and competent
+2. **Clarity** – this app understands a real problem
+3. **Humanity** – this app is designed for real life, not clinics
+
+This is not a logo parade.
+This is a calm, confident system handshake.
+
+---
+
+## 🎯 Goals (in priority order)
+
+1. App feels **instant** (no perceived loading)
+2. Brand feels **thoughtful and modern**
+3. User feels **welcome, not marketed to**
+4. Transition into onboarding feels seamless
+
+---
+
+## Overall Brand Direction (Guiding Principles)
+
+* **Warm precision**
+* **Human but not cute**
+* **Delight through restraint**
+* **Confidence without hype**
+
+Think:
+
+* Stripe product surfaces
+* Linear’s calm authority
+* Apple system feedback
+* Duolingo *without* the cartoon energy
+
+---
+
+## 1) Splash Screen (0.5–1.0 seconds)
+
+### Purpose
+
+Signal competence and speed while the app initializes.
+This should feel like a system boot, not an ad.
+
+### Duration
+
+* **Target:** 500–800ms
+* **Hard max:** 1.2s
+* Must be skippable instantly if app is already warm
+
+---
+
+### Visual Design
+
+#### Background
+
+* Solid color
+* Two recommended options:
+
+  * **Soft off-white** (`#FAFAF8`)
+  * **Very light warm gray** (`#F4F4F2`)
+* No gradients
+* No texture
+
+#### Logo
+
+* Centered
+* Simple CarbScan wordmark or icon
+* Single color (charcoal or near-black)
+* No animation on the logo itself
+
+#### Optional micro-motion (very subtle)
+
+Choose **one**, not both:
+
+**Option A: Line draw-in**
+
+* Thin stroke (1–1.5px)
+* Logo outline draws in over ~300ms
+* Easing: ease-out
+* Feels like “initializing”
+
+**Option B: Opacity fade**
+
+* Logo fades from 0 → 100%
+* 200–300ms
+* Almost imperceptible
+
+No bounce. No scale. No flair.
+
+---
+
+### Technical Notes
+
+* Use native splash where possible (Expo `splash`)
+* Avoid JS-driven animation if it risks jank
+* Splash should disappear immediately once JS is ready
+
+---
+
+## 2) Welcome Screen (Brand Moment + Invitation)
+
+This is the **first real screen**.
+It replaces the idea of a traditional “hero marketing screen.”
+
+---
+
+### Screen Name
+
+`WelcomeScreen`
+
+---
+
+### Layout Structure (Top → Bottom)
+
+1. **Illustration / Line Art Area**
+2. **Brand Statement (1 sentence)**
+3. **Primary Action**
+4. **Secondary Trust Line**
+
+---
+
+### 1) Illustration / Line Art Area (Delight Moment)
+
+This is the personality.
+
+![Image](https://i.pinimg.com/736x/90/4d/84/904d843d70c0f72fdecde1da0c5deb6b.jpg)
+
+![Image](https://i.etsystatic.com/36758097/r/il/5ed916/4072696971/il_fullxfull.4072696971_qhs5.jpg)
+
+![Image](https://cbx-prod.b-cdn.net/COLOURBOX44448718.jpg?height=480\&quality=70\&width=480)
+
+![Image](https://blog.tubikstudio.com/wp-content/uploads/2023/07/granola-bar-packaging-design-illustration-tubikarts.jpg)
+
+#### Style
+
+* **Single-line or minimal line art**
+* Stroke weight: thin (1–1.5px)
+* No fill, or extremely subtle fill
+* One accent color max
+
+#### Subject Matter (rotate randomly or pick one)
+
+* A plate with imperfect food portions
+* A bowl with mixed ingredients
+* A snack wrapper partially open
+* A fork hovering over a plate
+* A camera outline framing food
+
+Nothing aspirational.
+Nothing “healthy lifestyle” coded.
+Just *food, as it is*.
+
+#### Motion (optional, highly recommended)
+
+* 1–2 second loop
+* Very subtle:
+
+  * Line gently draws and undraws
+  * Small parallax drift
+  * Soft breathing motion (1–2px movement)
+
+Motion must:
+
+* Never distract
+* Never delay interaction
+* Pause when app backgrounded
+
+---
+
+### 2) Brand Statement (Core Line)
+
+This is *not* marketing copy.
+It’s a calm framing of value.
+
+**Primary option**
+
+> **“Understand carbs as easily as taking a photo.”**
+
+**Alternates (for A/B later)**
+
+* “Carb clarity, one photo at a time.”
+* “Carbs, without the guesswork.”
+* “See the carbs. Decide with confidence.”
+
+Typography:
+
+* Large, readable
+* Not bold
+* Max 2 lines
+* Centered or left-aligned depending on system style
+
+---
+
+### 3) Primary Action
+
+This should feel like an invitation, not a funnel.
+
+**Button**
+
+* Label: **“Scan a meal”**
+* Full width
+* Strong contrast
+* Rounded but not pill-shaped
+* Immediate tactile feedback
+
+Interaction:
+
+* Tap → goes directly to camera flow
+* If permission needed, handled contextually later
+
+---
+
+### 4) Secondary Trust Line
+
+Small, quiet reassurance.
+
+Examples:
+
+* “No account needed to try.”
+* “Takes just a few seconds.”
+* “Built for real meals.”
+
+Font:
+
+* Small
+* Muted color
+* Never clickable
+
+---
+
+## Motion & Transitions
+
+* Welcome screen should **slide or fade in seamlessly** from splash
+* No hard cuts
+* Transition into onboarding should feel continuous
+* When user taps “Scan a meal,” illustration subtly fades out while camera loads
+
+---
+
+## Performance Requirements (Critical)
+
+* Welcome screen must render in <16ms on modern devices
+* Illustration must be:
+
+  * SVG or Lottie
+  * No large PNGs
+* All assets bundled locally (no network)
+
+If performance drops, **remove motion before removing illustration**.
+
+---
+
+## Accessibility
+
+* Illustration is decorative, marked `accessibilityHidden`
+* Text contrast AA compliant
+* Button hit area ≥44px
+* Supports Dynamic Type
+
+---
+
+## Analytics (Light)
+
+Track:
+
+* `splash_shown`
+* `welcome_viewed`
+* `welcome_cta_tapped`
+* Time from app open → CTA tap
+
+Do not over-instrument.
+
+---
+
+## Anti-Patterns (Do NOT Do These)
+
+* No loading spinners
+* No slogans about health, diabetes, or control
+* No emoji
+* No mascot
+* No “Get Started” button
+* No modal popups
+* No permission prompts here
+
+---
+
+## Implementation Notes for Replit
+
+* Implement Splash using Expo config
+* WelcomeScreen as first React Navigation route
+* Illustration component isolated for iteration
+* Copy sourced from config for easy experimentation
+
+---
+
+## North Star Test
+
+Ask this question:
+
+> “Does this feel like a calm, confident tool I can trust with daily decisions?”
+
+If it feels loud, clever, or salesy, it’s wrong.
+
+---
+
+If you want next, I can:
+
+* Design **3 concrete illustration concepts** (described for an illustrator or Lottie designer)
+* Write a **mini brand style guide** (colors, type, spacing)
+* Or convert this into a **Replit agent task list** with acceptance criteria
+
+This is the right place to invest polish.

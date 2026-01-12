@@ -12,7 +12,7 @@ module.exports = function (api) {
             "@shared": "./shared",
             "@assets": "./assets",
           },
-          extensions: [".ios.js", ".android.js", ".js", ".ts", ".tsx", ".json"],
+          extensions: [".ios.js", ".android.js", ".js", ".ts", ".tsx", ".json", ".svg"],
         },
       ],
       "react-native-reanimated/plugin",

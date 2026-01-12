@@ -9,6 +9,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Card } from "@/components/Card";
 import { Button } from "@/components/Button";
+import { WelcomeIllustration } from "@/components/WelcomeIllustration";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius, Shadows, Typography } from "@/constants/theme";
 import { useOnboardingStore, SavedScan } from "@/stores/onboardingStore";
@@ -83,8 +84,8 @@ export default function OnboardingHomeScreen() {
 
   const renderEmptyState = useCallback(() => (
     <View style={styles.emptyState}>
-      <View style={[styles.emptyIcon, { backgroundColor: theme.surfaceAlt }]}>
-        <Feather name="camera" size={32} color={theme.textTertiary} />
+      <View style={styles.illustrationContainer}>
+        <WelcomeIllustration maxWidth={240} />
       </View>
       <ThemedText style={[styles.emptyTitle, { color: theme.textSecondary }]}>
         No meals scanned yet
@@ -262,13 +263,8 @@ const styles = StyleSheet.create({
     gap: Spacing.s3,
     paddingBottom: 120,
   },
-  emptyIcon: {
-    width: 80,
-    height: 80,
-    borderRadius: BorderRadius.r4,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: Spacing.s3,
+  illustrationContainer: {
+    marginBottom: Spacing.s6,
   },
   emptyTitle: {
     ...Typography.body,

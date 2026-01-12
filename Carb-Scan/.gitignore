@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+
+# Python virtual environment
+.venv/
+
+# Expo
+.expo/
+dist/
+web-build/
+
+# Native builds
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+
+# Metro
+.metro-health-check*
+
+# Debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# macOS
+.DS_Store
+
+# Local env
+.env*.local
+
+# TypeScript
+*.tsbuildinfo
+
+# Server build
+server_dist/
